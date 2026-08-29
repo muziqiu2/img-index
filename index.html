@@ -1,20 +1,95 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
     <meta charset="UTF-8">
-    <title>魔法师图床</title>
-    <meta name="author" content="Akatsukiro">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="keywords" content="魔法师图床,魔法师,免费图床,公益图床"/>
-    <meta name="description" content="魔法师图床"/>
-    <link rel="shortcut icon" href="https://tc.mofashi.ltd/favicon.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- 标题与描述 -->
+    <title>魔法师图床 - 永久免费公益图床 | 高速图床服务</title>
+    <meta name="author" content="Akatsukiro">
+    <meta name="keywords" content="魔法师图床,魔法师,免费图床,公益图床,图片床,图床教程">
+    <meta name="description" content="魔法师图床是免费、永久免费的公益图床，基于兰空图床搭建，使用全球CDN加速、对象存储与多机镜像架构，简单好用，永久免费，赞助后无限容量。">
+
+    <!-- 主题色 / 移动端 -->
+    <meta name="theme-color" content="#0ea5e9">
+
+    <!-- 社交分享 (Open Graph / Twitter) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="魔法师图床">
+    <meta property="og:title" content="魔法师图床 - 永久免费公益图床">
+    <meta property="og:description" content="简单、好用、免费的公益图床，使用兰空图床与全球CDN加速。">
+    <meta property="og:url" content="https://tc.mofashi.ltd/">
+    <meta property="og:image" content="https://free-img.mofashi.ltd/5/2026/08/22/6a89ae697d594.webp">
+    <meta property="og:locale" content="zh_CN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="魔法师图床 - 永久免费公益图床">
+    <meta name="twitter:description" content="简单、好用、免费的公益图床。">
+    <meta name="twitter:image" content="https://free-img.mofashi.ltd/5/2026/08/22/6a89ae697d594.webp">
+
+    <!-- canonical URL -->
+    <link rel="canonical" href="https://tc.mofashi.ltd/">
+
+    <!-- favicon -->
+    <link rel="icon" type="image/png" href="static/picture/favicon.png">
+    <link rel="shortcut icon" href="static/picture/favicon.png">
+
+    <!-- 结构化数据 (SEO) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "魔法师图床",
+        "url": "https://tc.mofashi.ltd/",
+        "description": "免费、永久的公益图床服务，使用兰空图床与全球CDN加速。",
+        "inLanguage": "zh-CN",
+        "potentialAction": {
+            "@type": "CreateAction",
+            "target": "https://tc.mofashi.ltd/index.php"
+        }
+    }
+    </script>
+
+    <!-- 关键背景图预加载：减少首屏 LCP 空白 -->
+    <link rel="preload" as="image" href="https://free-img.mofashi.ltd/5/2026/08/22/6a89ae697d594.webp">
+    <link rel="preload" as="image" href="static/images/lankong.webp">
+
+    <!-- 本地样式 -->
     <link href="static/css/main.css" rel="stylesheet">
-    <script src="static/js/alpine.js" defer></script>
-    <script defer data-domain="akass.cn" src="static/js/script.js"></script>
-    <!-- 添加Font Awesome的CSS链接 -->
-    <link href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-20-M/font-awesome/6.0.0/css/all.css" rel="stylesheet">
+    <script src="static/js/alpine.js" defer=""></script>
+
     <style>
-        /* 手机访问时设置背景为透明 */
+        /* 赞助入口毛玻璃药丸：悬停时加深背景、提亮描边 */
+        .sponsor-pill:hover {
+            background-color: rgba(255,255,255,.22) !important;
+            border-color: rgba(255,255,255,.35) !important;
+        }
+        /* 全屏固定背景层：position:fixed 以视口为基准（脱离文档流），配合 100dvh 跟随移动端
+           地址栏收起/展开，滚动时视口高度不再突变，背景不会「跳动 / 变尺寸」 */
+        .site-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh; /* 动态视口高度：跟随移动端地址栏，滚动后仍铺满当前可视高度 */
+            z-index: -1;
+            background-image: url('https://free-img.mofashi.ltd/5/2026/08/22/6a89ae697d594.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+        /* 底部版权/备案文字：白天浅灰，悬停加深；夜间提亮保证可读 */
+        .footer-text {
+            color: #6b7280;
+            text-decoration: none;
+        }
+        .footer-text:hover {
+            color: #111827;
+        }
+        .footer-time b {
+            color: #dc2626;
+        }
         @media (max-width: 1024px) {
             .mobile-transparent-bg {
                 background-color: transparent !important;
@@ -22,45 +97,43 @@
             .mobile-menu {
                 background-color: transparent !important;
             }
+            /* 移动端背景：竖版图，cover 以视口为基准铺满单屏，不放大变形 */
+            .site-bg {
+                background-image: url('https://free-img.mofashi.ltd/5/2026/08/23/6a89c8eb923bc.webp');
+            }
+        }
+        /* 夜间模式：底部署名/备案文字与红色数字一并提亮 */
+        @media (prefers-color-scheme: dark) {
+            .footer-text {
+                color: #e5e7eb;
+            }
+            .footer-text:hover {
+                color: #ffffff;
+            }
+            .footer-time b {
+                color: #f87171;
+            }
         }
     </style>
 </head>
-<body x-data="{navIsOpen: false}" class="h-full w-full font-sans text-white antialiased bg-fixed bg-center backdrop-brightness-90" style="background-image: url('static/images/bj.webp'); background-size: cover; background-repeat: no-repeat;">
+<body class="h-full w-full font-sans text-white antialiased">
+<!-- 全屏固定背景层：position:fixed 以视口为基准，真机不放大，桌面/移动端分别用不同图 -->
+<div class="site-bg" aria-hidden="true"></div>
 <div class="absolute top-0 w-full">
-    <header class="relative z-50" @keydown.window.escape="navIsOpen = false" @click.away="navIsOpen = false">
-        
+    <header class="relative z-50">
         <div class="relative max-w-screen-2xl mx-auto w-full py-4 bg-white transition duration-200 lg:bg-transparent lg:py-6 dark:bg-slate-900 mobile-transparent-bg">
             <div class="max-w-screen-xl mx-auto px-5 flex items-center justify-between">
                 <div class="mr-10 inline-flex items-center">
-                    <a>
-                        <img class="ml-5 sm:block" style="width: 150px; height: auto;" src="static/picture/favicon.png" alt="mofashi"/>
+                    <a href="https://tc.mofashi.ltd/">
+                        <img class="ml-5 sm:block" style="width: 150px; height: auto;" src="static/picture/favicon.png" alt="魔法师图床 Logo">
                     </a>
                 </div>
-                <ul class="relative hidden lg:flex lg:items-center lg:justify-center lg:gap-6 xl:gap-10">
-                </ul>
-                <div class="flex-1 flex items-center justify-end">
-                    <button class="ml-2 relative w-10 h-10 inline-flex items-center justify-center p-2 text-gray-700 lg:hidden" aria-label="Toggle Menu" @click.prevent="navIsOpen = !navIsOpen">
-                        <svg x-show="! navIsOpen" class="w-6" viewBox="0 0 28 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;"><line y1="1" x2="28" y2="1" stroke="currentColor" stroke-width="2"></line><line y1="11" x2="28" y2="11" stroke="currentColor" stroke-width="2"></line></svg>
-                        <svg x-show="navIsOpen" class="absolute inset-0 mt-2.5 ml-2.5 w-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg"><rect y="1.41406" width="2" height="24" transform="rotate(-45 0 1.41406)" fill="currentColor"></rect><rect width="2" height="24" transform="matrix(0.707107 0.707107 0.707107 -0.707107 0.192383 16.9707)" fill="currentColor"></rect></svg>
-                    </button>
-                    <!-- 添加赞助标识 -->
-                    <a href="https://afd.mofashi.ltd" class="ml-4 flex items-center text-gray-700" aria-label="Donate" target="_blank" style="font-size: 1.1rem; color: #00BFFF;">
-                        <i class="fa-solid fa-heart" style="color: #00BFFF; font-size: 1.3rem;"></i>
-                        <span class="ml-2" style="color: #00BFFF;">赞助一下</span>
-                    </a>
-                </div>
+                <!-- 赞助入口：右上角毛玻璃爱心药丸（内联样式，保证任意环境生效） -->
+                <a href="https://afd.mofashi.ltd" target="_blank" rel="noopener" aria-label="赞助我们" class="sponsor-pill inline-flex items-center" style="gap:6px; padding:7px 16px; border-radius:999px; font-size:14px; font-weight:500; line-height:1.4; color:#ffffff; text-decoration:none; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); box-shadow:0 1px 4px rgba(0,0,0,.12); transition:background .2s ease,border-color .2s ease,color .2s ease;">
+                    <svg class="inline-block" style="width:16px; height:16px; color:#7dd3fc; fill:currentColor;" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+                    赞助我们
+                </a>
             </div>
-        </div>
-        
-        <div x-show="navIsOpen" class="lg:hidden" x-transition:enter="duration-150" x-transition:leave="duration-100 ease-in">
-            <nav x-show="navIsOpen" x-transition.opacity="" class="fixed inset-0 w-full pt-[4.2rem] z-10 pointer-events-none mobile-menu">
-                <div class="relative h-full w-full py-8 px-5 bg-white pointer-events-auto overflow-y-auto text-gray-900 dark:bg-slate-900 dark:text-slate-400 mobile-transparent-bg">
-                    <ul>
-                        <li class="flex sm:justify-center">
-                        </li>
-                    </ul>
-                </div>
-            </nav>
         </div>
     </header>
 </div>
@@ -70,14 +143,13 @@
     <div class="relative max-w-screen-xl px-5 mx-auto">
         <div class="relative">
             <h1 class="bg-clip-text text-transparent bg-gradient-to-r from-aka-default to-aka-dark max-w-3xl mx-auto text-5xl font-bold text-center md:text-6xl lg:text-7xl">魔法师图床<br><span class="text-sky-400 md:text-4xl lg:text-5xl">简单！好用！免费！</span></h1>
-            <p class="mt-6 max-w-xl mx-auto text-center text-white text-md leading-relaxed md:mt-8 md:text-lg lg:mt-10">使用由魔法师提供图床服务，<br>妈妈再也不用担心我的网站加载慢啦！</p>
+            <p class="mt-6 max-w-xl mx-auto text-center text-white text-md leading-relaxed md:mt-8 md:text-lg lg:mt-10">由魔法师提供免费图床服务，<br>再也不用担心网站加载慢啦！</p>
             <div class="mt-6 max-w-sm mx-auto flex flex-col justify-center items-center gap-4 sm:flex-row md:mt-8 lg:mt-10">
                 <a class="rounded-lg group relative inline-flex border border-sky-500 focus:outline-none w-full sm:w-auto" href="https://tc.mofashi.ltd/index.php" rel="noopener">
                     <span class="rounded-lg w-full inline-flex items-center justify-center self-stretch px-4 py-2 text-sm text-white text-center font-bold uppercase bg-sky-500 ring-1 ring-sky-500 ring-offset-1 ring-offset-sky-500 transform transition-transform group-hover:-translate-y-1 group-hover:-translate-x-1 group-focus:-translate-y-1 group-focus:-translate-x-1">
                         上传图片
                     </span>
                 </a>
-
             </div>
         </div>
     </div>
@@ -86,25 +158,26 @@
 <div class="relative bg-white text-gray-900 overflow-hidden py-16 md:pt-28 dark:bg-slate-900">
     <span class="hidden absolute bg-radial-gradient opacity-[.15] pointer-events-none lg:inline-flex right-[-20%] top-0 w-[640px] h-[640px]"></span>
     <div class="max-w-screen-xl w-full mx-auto px-5 dark:text-white">
-        <h2 class="text-4xl font-bold max-w-lg md:text-5xl"><font style="vertical-align: inherit;">探索更多的可能。</font></h2>
+        <h2 class="text-4xl font-bold max-w-lg md:text-5xl">探索更多的可能。</h2>
         <div class="mt-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
             <div>
-                <svg t="1648270213571" class="icon" viewBox="0 0 1316 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1758" width="35" height="35"><path d="M0 0h182.857143v73.142857H0z" p-id="1759" fill="#1296db"></path><path d="M0 576.438857h182.857143v73.142857H0z" p-id="1760" fill="#1296db"></path><path d="M0 863.378286h182.857143v73.142857H0z" p-id="1761" fill="#1296db"></path><path d="M329.142857 0h643.218286v73.142857H329.142857z" p-id="1762" fill="#1296db"></path><path d="M0 288.256h182.857143v73.142857H0z" p-id="1763" fill="#1296db"></path><path d="M329.142857 288.256h643.218286v73.142857H329.142857z" p-id="1764" fill="#1296db"></path><path d="M329.142857 576.438857h643.218286v73.142857H329.142857z" p-id="1765" fill="#1296db"></path><path d="M338.944 877.714286h219.428571v73.142857h-219.428571z" p-id="1766" fill="#1296db"></path><path d="M1266.688 570.002286l-393.654857 367.396571-158.500572-147.968-49.883428 53.467429 183.442286 171.300571a36.571429 36.571429 0 0 0 49.883428 0L1316.571429 623.469714z" p-id="1767" fill="#1296db"></path></svg>
+                <svg class="icon" viewBox="0 0 1316 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="35" height="35"><path d="M0 0h182.857143v73.142857H0z" fill="#1296db"></path><path d="M0 576.438857h182.857143v73.142857H0z" fill="#1296db"></path><path d="M0 863.378286h182.857143v73.142857H0z" fill="#1296db"></path><path d="M329.142857 0h643.218286v73.142857H329.142857z" fill="#1296db"></path><path d="M0 288.256h182.857143v73.142857H0z" fill="#1296db"></path><path d="M329.142857 288.256h643.218286v73.142857H329.142857z" fill="#1296db"></path><path d="M329.142857 576.438857h643.218286v73.142857H329.142857z" fill="#1296db"></path><path d="M338.944 877.714286h219.428571v73.142857h-219.428571z" fill="#1296db"></path><path d="M1266.688 570.002286l-393.654857 367.396571-158.500572-147.968-49.883428 53.467429 183.442286 171.300571a36.571429 36.571429 0 0 0 49.883428 0L1316.571429 623.469714z" fill="#1296db"></path></svg>
                 <h3 class="mt-5 text-xl font-bold">稳定服务</h3>
                 <p class="mt-4 text-gray-700 text-sm leading-relaxed dark:text-slate-400">魔法师图床 使用高性能物理服务器，为 魔法师图床 提供了健壮稳固的底层基础。</p>
             </div>
             <div>
-                <svg t="1648270055943" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="900" width="35" height="35"><path d="M959.567832 114.086844a26.656469 26.656469 0 0 0-21.882176-6.024703A601.276719 601.276719 0 0 1 535.394644 4.675965a26.883816 26.883816 0 0 0-38.364853 8.639197c-95.088 161.814427-357.617272 130.724686-360.231766 130.724686a26.542795 26.542795 0 0 0-21.143297 6.536234 26.940653 26.940653 0 0 0-9.150728 20.177071v287.139615a26.883816 26.883816 0 1 0 53.824469 0V199.967279c74.797255 3.808067 268.440301-0.511531 367.620552-135.612653a661.353238 661.353238 0 0 0 387.342928 100.430661v320.048134h-54.620184l-80.083079-213.59277a26.940653 26.940653 0 0 0-51.153138 1.534594l-95.770042 311.238427-85.25523-170.965155a26.770142 26.770142 0 0 0-19.722377-14.493389 26.429121 26.429121 0 0 0-23.359933 7.50246L370.738377 540.647178l38.080669 38.08067 107.989958-107.989958 98.782393 197.621623a26.99749 26.99749 0 0 0 24.098812 14.891247h2.216636a26.883816 26.883816 0 0 0 23.530443-18.869825l92.302996-299.984736 58.882946 157.096971a26.940653 26.940653 0 0 0 25.235548 17.50574h73.376335v24.269323c-32.738008 334.314176-351.819916 404.223464-365.403917 407.008468a26.940653 26.940653 0 0 0 5.683682 53.312937 29.49831 29.49831 0 0 0 5.683682-0.511531c3.694393-0.795715 371.542293-80.083079 408.315716-457.195381V135.116467a26.713305 26.713305 0 0 0-9.946444-21.029623z" p-id="901" fill="#1296db"></path><path d="M349.76559 821.307396a151.583799 151.583799 0 1 0-226.437891 0A150.162879 150.162879 0 0 0 53.759431 942.540333a26.883816 26.883816 0 0 0 53.824469 0 103.84087 103.84087 0 0 1 60.815397-85.766762 143.569807 143.569807 0 0 0 136.408368 0 102.647297 102.647297 0 0 1 60.474377 85.880435 26.883816 26.883816 0 0 0 53.824468 0 150.447063 150.447063 0 0 0-69.34092-121.34661zM138.787314 719.853672a97.75933 97.75933 0 1 1 97.75933 100.373824 99.180251 99.180251 0 0 1-97.75933-100.373824z" p-id="902" fill="#1296db"></path></svg>
+                <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="35" height="35"><path d="M959.567832 114.086844a26.656469 26.656469 0 0 0-21.882176-6.024703A601.276719 601.276719 0 0 1 535.394644 4.675965a26.883816 26.883816 0 0 0-38.364853 8.639197c-95.088 161.814427-357.617272 130.724686-360.231766 130.724686a26.542795 26.542795 0 0 0-21.143297 6.536234 26.940653 26.940653 0 0 0-9.150728 20.177071v287.139615a26.883816 26.883816 0 1 0 53.824469 0V199.967279c74.797255 3.808067 268.440301-0.511531 367.620552-135.612653a661.353238 661.353238 0 0 0 387.342928 100.430661v320.048134h-54.620184l-80.083079-213.59277a26.940653 26.940653 0 0 0-51.153138 1.534594l-95.770042 311.238427-85.25523-170.965155a26.770142 26.770142 0 0 0-19.722377-14.493389 26.429121 26.429121 0 0 0-23.359933 7.50246L370.738377 540.647178l38.080669 38.08067 107.989958-107.989958 98.782393 197.621623a26.99749 26.99749 0 0 0 24.098812 14.891247h2.216636a26.883816 26.883816 0 0 0 23.530443-18.869825l92.302996-299.984736 58.882946 157.096971a26.940653 26.940653 0 0 0 25.235548 17.50574h73.376335v24.269323c-32.738008 334.314176-351.819916 404.223464-365.403917 407.008468a26.940653 26.940653 0 0 0 5.683682 53.312937 29.49831 29.49831 0 0 0 5.683682-0.511531c3.694393-0.795715 371.542293-80.083079 408.315716-457.195381V135.116467a26.713305 26.713305 0 0 0-9.946444-21.029623z" fill="#1296db"></path><path d="M349.76559 821.307396a151.583799 151.583799 0 1 0-226.437891 0A150.162879 150.162879 0 0 0 53.759431 942.540333a26.883816 26.883816 0 0 0 53.824469 0 103.84087 103.84087 0 0 1 60.815397-85.766762 143.569807 143.569807 0 0 0 136.408368 0 102.647297 102.647297 0 0 1 60.474377 85.880435 26.883816 26.883816 0 0 0 53.824468 0 150.447063 150.447063 0 0 0-69.34092-121.34661zM138.787314 719.853672a97.75933 97.75933 0 1 1 97.75933 100.373824 99.180251 99.180251 0 0 1-97.75933-100.373824z" fill="#1296db"></path></svg>
                 <h3 class="mt-5 text-xl font-bold">安全可靠</h3>
                 <p class="mt-4 text-gray-700 text-sm leading-relaxed dark:text-slate-400">魔法师图床 使用质量可靠的SSL证书，最低TLS版本为1.2，保障文件不被篡改。</p>
             </div>
             <div>
-                <svg t="1648270165153" class="icon" viewBox="0 0 1152 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1415" width="35" height="35"><path d="M421.312 120.448a151.808 151.808 0 0 0-297.024 0H0.128v60.288h124.288a151.808 151.808 0 0 0 297.024 0h730.688v-60.288z m-148.48 120.512a90.368 90.368 0 1 1 90.944-90.368 90.752 90.752 0 0 1-90.944 90.368z" p-id="1416" fill="#1296db"></path><path d="M879.104 361.408a151.616 151.616 0 0 0-148.48 120.448H0.128v60.288h730.624a151.808 151.808 0 0 0 297.024 0h124.352v-60.288h-124.352a151.616 151.616 0 0 0-148.672-120.448z m0 240.96A90.368 90.368 0 1 1 970.048 512a90.816 90.816 0 0 1-90.944 90.368z" p-id="1417" fill="#1296db"></path><path d="M454.528 722.816a151.616 151.616 0 0 0-148.544 120.448H0.128v60.288h306.176a151.808 151.808 0 0 0 297.024 0h548.8v-60.288H603.328a151.616 151.616 0 0 0-148.8-120.448z m0 240.96a90.368 90.368 0 1 1 90.944-90.368 90.752 90.752 0 0 1-90.944 90.368z" p-id="1418" fill="#1296db"></path></svg>
+                <svg class="icon" viewBox="0 0 1152 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="35" height="35"><path d="M421.312 120.448a151.808 151.808 0 0 0-297.024 0H0.128v60.288h124.288a151.808 151.808 0 0 0 297.024 0h730.688v-60.288z m0 120.512a90.368 90.368 0 1 1 90.944-90.368 90.752 90.752 0 0 1-90.944 90.368z" fill="#1296db"></path><path d="M879.104 361.408a151.616 151.616 0 0 0-148.48 120.448H0.128v60.288h730.624a151.808 151.808 0 0 0 297.024 0h124.352v-60.288h-124.352a151.616 151.616 0 0 0-148.672-120.448z m0 240.96A90.368 90.368 0 1 1 970.048 512a90.816 90.816 0 0 1-90.944 90.368z" fill="#1296db"></path><path d="M454.528 722.816a151.616 151.616 0 0 0-148.544 120.448H0.128v60.288h306.176a151.808 151.808 0 0 0 297.024 0h548.8v-60.288H603.328a151.616 151.616 0 0 0-148.8-120.448z m0 240.96a90.368 90.368 0 1 1 90.944-90.368 90.752 90.752 0 0 1-90.944 90.368z" fill="#1296db"></path></svg>
                 <h3 class="mt-5 text-xl font-bold">高速传输</h3>
                 <p class="mt-4 text-gray-700 text-sm leading-relaxed dark:text-slate-400">魔法师图床 使用全球CDN进行加速，全面采用优化后线路， 保证每一次访问的速度！</p>
             </div>
             <div>
-                <svg t="1648270137494" class="icon" viewBox="0 0 1152 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1243" width="35" height="35"><path d="M565.28704 603.712a28.992 28.992 0 0 0 12.8-3.072l535.04-269.888a32.832 32.832 0 0 0 0-57.6L578.08704 3.328a28.736 28.736 0 0 0-26.048 0L16.99904 273.152a32.896 32.896 0 0 0 0 57.6l535.04 269.888a29.184 29.184 0 0 0 13.248 3.072z m0-536.32l464.704 234.496L565.28704 536.32 100.58304 301.888z" p-id="1244" fill="#1296db"></path><path d="M1108.32704 478.592l-522.112 273.024-522.048-273.024a29.568 29.568 0 0 0-40.576 14.528 32.896 32.896 0 0 0 13.696 42.88L572.83904 816a29.056 29.056 0 0 0 13.376 3.328 29.504 29.504 0 0 0 13.44-3.328l535.488-280a32.896 32.896 0 0 0 13.76-42.88 29.568 29.568 0 0 0-40.576-14.528z" p-id="1245" fill="#1296db"></path><path d="M1108.32704 683.328l-522.112 272.96-522.048-272.96a29.568 29.568 0 0 0-40.576 14.528 32.896 32.896 0 0 0 13.696 42.88l535.552 279.936a29.056 29.056 0 0 0 13.376 3.328 29.504 29.504 0 0 0 13.44-3.328l535.488-279.936a32.896 32.896 0 0 0 13.76-42.88 29.568 29.568 0 0 0-40.576-14.528z" p-id="1246" fill="#1296db"></path></svg>
+                <svg class="icon" viewBox="0 0 1152 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="35" height="35"><path d="M565.28704 603.712a28.992 28.992 0 0 0 12.8-3.072l535.04-269.888a32.832 32.832 0 0 0 0-57.6L578.08704 3.328a28.736 28.736 0 0 0-26.048 0L16.99904 273.152a32.896 32.896 0 0 0 0 57.6l535.04 269.888a29.184 29.184 0 0 0 13.248 3.072z m0-536.32l464.704 234.496L565.28704 536.32 100.58304 301.888z" fill="#1296db"></path><path d="M1108.32704 478.592l-522.112 273.024-522.048-273.024a29.568 29.568 0 0 0-40.576 14.528 32.896 32.896 0 0 0 13.696 42.88L572.83904 816a29.056 29.056 0 0 0 13.376 3.328 29.504 29.504 0 0 0 13.44-3.328l535.488-280a32.896 32.896 0 0 0 13.76-42.88 29.568 29.568 0 0 0-40.576-14.528z" fill="#1296db"></path><path d="M1108.32704 683.328l-522.112 272.96-522.048-272.96a29.568 29.568 0 0 0-40.576 14.528 32.896 32.896 0 0 0 13.696 42.88l535.552 279.936a29.056 29.056 0 0 0 13.376 3.328 29.504 29.504 0 0 0 13.44-3.328l535.488-279.936a32.896 32.896 0 0 0 13.76-42.88 29.568 29.568 0 0 0-40.576-14.528z" fill="#1296db"></path></svg>
                 <h3 class="mt-5 text-xl font-bold">公益免费</h3>
                 <p class="mt-4 text-gray-700 text-sm leading-relaxed dark:text-slate-400">魔法师图床 永久免费使用，用户无需交付任何费用 目前仅接受服务赞助！</p>
             </div>
@@ -116,23 +189,7 @@
     <div class="relative max-w-screen-xl w-full mx-auto xl:px-5">
         <div class="relative w-full grid gap-12 lg:grid-cols-2">
             <div class="overflow-hidden flex justify-center lg:order-last">
-                <div class="rounded-lg bg-no-repeat bg-left-bottom w-full" style="  
-
-  background-image: url(static/images/lankong.webp);  
-
-  background-size: cover; /* 确保背景图片覆盖整个div */  
-
-  background-position: bottom left; /* 确保图片从左下角开始显示 */  
-
-  width: 100%; /* 或使用w-full，如果你使用的是Tailwind CSS */  
-
-  padding-bottom: 55.41%; /* 计算为 1310 / 2026 * 100 = 64.7% 并稍作调整以适应圆角 */  
-
-  position: relative; /* 如果需要在div内部定位其他内容 */  
-
-">  
-
-</div>
+                <div class="rounded-lg bg-no-repeat bg-left-bottom w-full" style="background-image: url(static/images/lankong.webp); background-size: cover; background-position: bottom left; padding-bottom: 55.41%; position: relative;"></div>
             </div>
             <div class="w-full flex justify-center items-center px-5 xl:px-0">
                 <div class="sm:max-w-[480px]">
@@ -147,12 +204,12 @@
 <div class="relative bg-white text-gray-900 overflow-hidden pt-12 pb-16 md:pt-28 dark:bg-slate-900">
     <div class="max-w-screen-xl w-full mx-auto px-5 grid gap-12 lg:grid-cols-2">
         <div class="flex justify-center items-center">
-         <div class="rounded-lg bg-no-repeat bg-top-left w-full h-[300px]" style="background-image: url(static/images/0755dbda7d4f1.png)"></div>
+            <div class="rounded-lg bg-no-repeat bg-top-left w-full h-[300px]" style="background-image: url(static/images/0755dbda7d4f1.png)"></div>
         </div>
         <div class="w-full flex justify-center items-center">
             <div class="sm:max-w-[480px]">
                 <h2 class="text-4xl font-bold md:text-5xl dark:text-white">难以想象的全球加速网络</h2>
-                <p class="mt-6 text-gray-700 leading-relaxed dark:text-slate-400">得益于CloudFlare和百度智能云的全球加速节点，在每个地区都可以访问 </p>
+                <p class="mt-6 text-gray-700 leading-relaxed dark:text-slate-400">得益于CloudFlare和百度智能云的全球加速节点，在每个地区都可以访问</p>
             </div>
         </div>
     </div>
@@ -186,55 +243,40 @@
             </div>
         </div>
     </div>
-    <div style="text-align: center; margin-top: 20px;"> <!-- 使用margin-top增加间距 -->  
-
-        <a href="https://beian.miit.gov.cn/" rel="nofollow" style="display: inline-flex; align-items: center;">  
-      
-          <img src="static/images/icplogo.webp" alt="ICP备案图标" style="width: 27px; height: 27px; margin-right: 5px;">  
-      
-          鲁ICP备2022005744号-1  
-      
-        </a>  
-      
-        <br>  
-      
-        <a href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=鲁公网安备37152102000141号" rel="nofollow" style="display: inline-flex; align-items: center;">  
-      
-          <img src="static/images/gonganlogo.webp" alt="公安备案图标" style="width: 27px; height: 27px; margin-right: 5px;">  
-      
-          鲁公网安备37152102000141号  
-      
-        </a>  
-      
-      </div>  
-          <center>
-        本站已安全运行：<span id="span_dt_dt" style="color: #2F889A;"></span>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="https://beian.miit.gov.cn/" rel="noopener" class="footer-text" style="display: inline-flex; align-items: center;">
+            <img src="https://vip-img.mofashi.ltd/2/2024/03/05/65e7168e4a93c.png" alt="ICP备案图标" style="width: 27px; height: 27px; margin-right: 5px;">
+            鲁ICP备2022005744号-1
+        </a>
+        <br>
+        <a href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=鲁公网安备37152102000141号" rel="noopener" class="footer-text" style="display: inline-flex; align-items: center;">
+            <img src="https://vip-img.mofashi.ltd/2/2024/03/29/6606a53662cef.webp" alt="公安备案图标" style="width: 27px; height: 27px; margin-right: 5px;">
+            鲁公网安备37152102000141号
+        </a>
+    </div>
+    <center class="footer-text">
+        本站已安全运行：<span id="span_dt_dt" class="footer-time"><font>1296</font> 天 <font>1</font> 时 <font>32</font> 分 <font>57</font> 秒</span>
         <script language="javascript">
-            function show_date_time(){
-                window.setTimeout("show_date_time()", 1000);
-                // 这里修改站点开启日期
-                BirthDay = new Date("02/04/2023 00:00:00");
-                today = new Date();
-                timeold = (today.getTime() - BirthDay.getTime());
-                sectimeold = timeold / 1000;
-                secondsold = Math.floor(sectimeold);
-                msPerDay = 24 * 60 * 60 * 1000;
-                e_daysold = timeold / msPerDay;
-                daysold = Math.floor(e_daysold);
-                e_hrsold = (e_daysold - daysold) * 24;
-                hrsold = Math.floor(e_hrsold);
-                e_minsold = (e_hrsold - hrsold) * 60;
-                minsold = Math.floor(e_minsold);
-                seconds = Math.floor((e_minsold - minsold) * 60);
-                span_dt_dt.innerHTML = '<font style="color:#C40000">' + daysold + '</font> 天 <font style="color:#C40000">' + hrsold + '</font> 时 <font style="color:#C40000">' + minsold + '</font> 分 <font style="color:#C40000">' + seconds + '</font> 秒';
-            }
-            show_date_time();
+            (function () {
+                // 站点开启日期（此处修改为实际上线时间）
+                var BirthDay = new Date("02/04/2023 00:00:00");
+                var span = document.getElementById('span_dt_dt');
+
+                function refresh() {
+                    var now = new Date();
+                    var ms = now.getTime() - BirthDay.getTime();
+                    var d = Math.floor(ms / 864e5);
+                    var h = Math.floor((ms % 864e5) / 36e5);
+                    var m = Math.floor((ms % 36e5) / 6e4);
+                    var s = Math.floor((ms % 6e4) / 1e3);
+                    span.innerHTML = '<b>' + d + '</b> 天 <b>' + h + '</b> 时 <b>' + m + '</b> 分 <b>' + s + '</b> 秒';
+                }
+                refresh();
+                setInterval(refresh, 1000);
+            })();
         </script>
     </center>
 </div>
 
 
-
-
-</body>
-</html>
+</body></html>
