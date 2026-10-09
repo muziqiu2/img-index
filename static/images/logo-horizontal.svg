@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" role="img" aria-label="魔法师图床">
+  <!-- 魔法师图床 横版字标：图标 + 中文名 + 英文副标 -->
+  <!-- 图标：方案 A 魔法帽 -->
+  <svg x="2" y="2" width="52" height="52" viewBox="0 0 96 96">
+    <rect width="96" height="96" rx="22" fill="#2563EB"/>
+    <path fill="#FFFFFF" d="M47 24 C43 39 39 55 33 70 L67 70 C61 55 56 40 54 28 C58 32 63 34.5 66.5 32.5 C63 27.5 54.5 24.5 47 24 Z"/>
+    <path fill="#FFFFFF" d="M24 70 Q48 62 72 70 Q48 80 24 70 Z"/>
+    <path fill="#FBBF24" d="M28 36 Q29.2 43 36 44.5 Q29.2 46 28 53 Q26.8 46 20 44.5 Q26.8 43 28 36 Z"/>
+    <path fill="#FBBF24" d="M74 21 Q74.8 25.2 79 26 Q74.8 26.8 74 31 Q73.2 26.8 69 26 Q73.2 25.2 74 21 Z"/>
+  </svg>
+  <!-- 中文名 -->
+  <text x="63" y="24.5" font-size="21" font-weight="600" fill="#0F172A" font-family="'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif">魔法师图床</text>
+  <!-- 英文副标 -->
+  <text x="63.5" y="42" font-size="9.5" letter-spacing="1.8" fill="#64748B" font-family="'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif">MOFASHI IMAGE HOSTING</text>
+</svg>
