@@ -8,7 +8,8 @@
     <meta name="description" content="魔法师图床 Cloudflare 线路的流量与请求统计。">
     <meta name="theme-color" content="#2563eb">
 
-    <!-- favicon（与首页保持一致） -->
+    <!-- favicon（与首页保持一致）：ICO 兜底优先，现代浏览器选 SVG -->
+    <link rel="icon" type="image/x-icon" sizes="32x32" href="favicon.ico">
     <link rel="icon" type="image/svg+xml" href="static/images/logo.svg">
     <link rel="shortcut icon" href="static/images/logo.svg">
     <link rel="apple-touch-icon" href="static/images/apple-touch-icon.png">
@@ -422,11 +423,8 @@
 <header class="hdr">
     <div class="wrap hdr__in">
         <a class="brand" href="/" aria-label="魔法师图床 首页">
-            <picture>
-                <source srcset="static/images/logo-horiz-540.webp" type="image/webp">
-                <img class="brand__img" src="static/images/logo-horiz-540.png"
-                     width="540" height="200" alt="魔法师图床" decoding="async">
-            </picture>
+            <img class="brand__img" src="static/images/logo-horizontal.svg"
+                 width="240" height="56" alt="魔法师图床" decoding="async">
         </a>
 
         <nav class="nav" aria-label="主导航">
