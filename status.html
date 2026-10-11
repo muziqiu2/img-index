@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>魔法师图床 · 服务状态</title>
+    <meta name="description" content="魔法师图床各服务实时可用状态与心跳监控。">
+    <meta name="theme-color" content="#2563eb">
+
+    <!-- favicon（与首页保持一致）：ICO 兜底优先，现代浏览器选 SVG -->
+    <link rel="icon" type="image/x-icon" sizes="32x32" href="favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="static/images/logo.svg">
+    <link rel="shortcut icon" href="static/images/logo.svg">
+    <link rel="apple-touch-icon" href="static/images/apple-touch-icon.png">
+
+    <style>
+        /* ==========================================================================
+           魔法师图床 · 服务状态页样式
+           设计语言：与 public/analytics.html、public/index.html 共用同一套
+           "Corporate Clean" 令牌（逐字抄自 analytics.html），并扩展状态语义色。
+           数据源：Uptime Kuma 公开 API（status.mofashi.ltd）。
+           ========================================================================== */
+
+        :root {
+            /* 色彩（与 analytics.html 逐字一致） */
+            --cc-bg: #f7f8fa;
+            --cc-surface: #ffffff;
+            --cc-line: #e4e7ec;
+            --cc-line-strong: #cbd2dc;
+            --cc-ink: #1f2430;
+            --cc-sub: #5f6b7a;
+            --cc-muted: #98a1b0;
+            --cc-accent: #2563eb;
+            --cc-accent-hover: #1d4ed8;
+            --cc-accent-soft: #eff4ff;
+            --cc-accent-line: #dbe6ff;
+
+            /* 状态语义色（本页扩展） */
+            --cc-ok: #16a34a;
+            --cc-ok-soft: #ecfdf3;
+            --cc-ok-line: #bbf7d0;
+            --cc-danger: #b91c1c;
+            --cc-danger-soft: #fef2f2;
+            --cc-danger-line: #fecaca;
+            --cc-warn: #b45309;
+            --cc-warn-soft: #fffbeb;
+            --cc-warn-line: #fde68a;
+            --cc-pending: #d1d5db;
+
+            /* 尺度 */
+            --cc-r-sm: 8px;
+            --cc-r: 10px;
+            --cc-r-lg: 12px;
+            --cc-wrap: 1120px;
+            --cc-gutter: clamp(20px, 5vw, 40px);
+
+            /* 阴影 */
+            --cc-shadow-card: 0 1px 2px rgba(31, 36, 48, .03), 0 4px 16px -8px rgba(31, 36, 48, .06);
+            --cc-shadow-lift: 0 8px 18px -8px rgba(37, 99, 235, .42), 0 2px 6px rgba(31, 36, 48, .06);
+
+            /* 排版 */
+            --cc-font: Nunito, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            --cc-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+            /* 动效 */
+            --cc-ease: cubic-bezier(.22, .8, .3, 1);
+            --cc-dur: .18s;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            margin: 0;
+            background: var(--cc-bg);
+            color: var(--cc-ink);
+            font-family: var(--cc-font);
+            font-size: 16px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        img, svg { display: block; max-width: 100%; }
+        a { color: inherit; text-decoration: none; }
+        h1, h2, p { margin: 0; }
+
+        :where(a, button):focus-visible {
+            outline: 2px solid var(--cc-accent);
+            outline-offset: 2px;
+            border-radius: var(--cc-r-sm);
+        }
+
+        .skip {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 200;
+            background: var(--cc-accent);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 0 0 var(--cc-r-sm) 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .skip:focus { left: 0; }
+
+        .wrap {
+            width: 100%;
+            max-width: var(--cc-wrap);
+            margin-inline: auto;
+            padding-inline: var(--cc-gutter);
+        }
+
+        /* ---------- 顶部导航（与首页/统计页同款） ---------- */
+        .hdr {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--cc-surface);
+            border-bottom: 1px solid var(--cc-line);
+            box-shadow: 0 1px 2px rgba(31, 36, 48, .04);
+        }
+        .hdr__in {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-height: 64px;
+        }
+        .brand { display: inline-flex; align-items: center; flex: none; }
+        .brand__img { height: 38px; width: auto; }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin-left: auto;
+        }
+        .nav__link {
+            padding: 8px 13px;
+            border-radius: var(--cc-r-sm);
+            font-size: 14.5px;
+            font-weight: 500;
+            color: var(--cc-sub);
+            transition: background-color var(--cc-dur) var(--cc-ease), color var(--cc-dur) var(--cc-ease);
+        }
+        .nav__link:hover { background: var(--cc-accent-soft); color: var(--cc-accent); }
+        .nav__link.is-active { background: var(--cc-accent-soft); color: var(--cc-accent); font-weight: 700; }
+
+        .hdr__cta { margin-left: 8px; }
+
+        .clock {
+            margin-left: 12px;
+            font-size: 13px;
+            color: var(--cc-sub);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* ---------- 按钮（同款） ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 20px;
+            border: 1px solid transparent;
+            border-radius: var(--cc-r-sm);
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+            transition: transform var(--cc-dur) var(--cc-ease),
+                        box-shadow var(--cc-dur) var(--cc-ease),
+                        background-color var(--cc-dur) var(--cc-ease),
+                        border-color var(--cc-dur) var(--cc-ease),
+                        color var(--cc-dur) var(--cc-ease);
+        }
+        .btn svg { width: 17px; height: 17px; flex: none; }
+
+        .btn--primary {
+            background: var(--cc-accent);
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(31, 36, 48, .08);
+        }
+        .btn--primary:hover {
+            background: var(--cc-accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--cc-shadow-lift);
+        }
+        .btn--primary:active { transform: translateY(0) scale(.98); }
+        .btn--sm { padding: 8px 14px; font-size: 14px; }
+
+        /* ---------- 主体 ---------- */
+        .page { padding-block: clamp(28px, 4vw, 40px) clamp(44px, 6vw, 64px); }
+
+        .page__title {
+            font-size: clamp(1.4rem, 3.2vw, 1.75rem);
+            font-weight: 800;
+            letter-spacing: -.022em;
+        }
+        .meta {
+            margin-top: 6px;
+            font-size: 12.5px;
+            color: var(--cc-sub);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ---------- 总览横幅 ---------- */
+        .banner {
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--cc-surface);
+            border: 1px solid var(--cc-line);
+            border-radius: var(--cc-r-lg);
+            box-shadow: var(--cc-shadow-card);
+            padding: 18px 20px;
+        }
+        .banner.is-ok { border-color: var(--cc-ok-line); }
+        .banner.is-down { border-color: var(--cc-danger-line); }
+        .banner.is-warn { border-color: var(--cc-warn-line); }
+        .banner__dot {
+            width: 14px;
+            height: 14px;
+            flex: none;
+            border-radius: 50%;
+            background: var(--cc-pending);
+            position: relative;
+        }
+        .banner.is-ok .banner__dot { background: var(--cc-ok); }
+        .banner.is-down .banner__dot { background: var(--cc-danger); }
+        .banner.is-warn .banner__dot { background: var(--cc-warn); }
+        .banner.is-ok .banner__dot::after,
+        .banner.is-down .banner__dot::after {
+            content: "";
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            animation: pulse 2.2s var(--cc-ease) infinite;
+        }
+        .banner.is-ok .banner__dot::after { box-shadow: 0 0 0 0 rgba(22, 163, 74, .35); }
+        .banner.is-down .banner__dot::after { box-shadow: 0 0 0 0 rgba(185, 28, 28, .35); }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0,0,0,.28); }
+            70% { box-shadow: 0 0 0 9px rgba(0,0,0,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+        }
+        .banner__txt { min-width: 0; }
+        .banner__title { font-size: 16.5px; font-weight: 700; letter-spacing: -.01em; }
+        .banner.is-ok .banner__title { color: var(--cc-ok); }
+        .banner.is-down .banner__title { color: var(--cc-danger); }
+        .banner.is-warn .banner__title { color: var(--cc-warn); }
+        .banner__sub {
+            margin-top: 2px;
+            font-size: 12.5px;
+            color: var(--cc-sub);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 事件与维护横幅 */
+        .notice {
+            margin-top: 12px;
+            border-radius: var(--cc-r);
+            border: 1px solid var(--cc-warn-line);
+            background: var(--cc-warn-soft);
+            padding: 12px 16px;
+            font-size: 13.5px;
+            color: var(--cc-warn);
+        }
+        .notice:empty { display: none; }
+
+        /* ---------- 监控面板 ---------- */
+        .panel {
+            background: var(--cc-surface);
+            border: 1px solid var(--cc-line);
+            border-radius: var(--cc-r-lg);
+            box-shadow: var(--cc-shadow-card);
+            margin-top: 14px;
+            padding: 20px 20px 16px;
+        }
+        .panel h2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--cc-sub);
+            letter-spacing: .04em;
+            margin-bottom: 6px;
+        }
+        .panel h2 .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 2px;
+            background: var(--cc-ok);
+            flex: none;
+        }
+        .panel h2 .hint {
+            margin-left: auto;
+            font-weight: 500;
+            font-size: 11.5px;
+            letter-spacing: 0;
+            color: var(--cc-muted);
+        }
+
+        .mon {
+            padding: 14px 2px 12px;
+            border-bottom: 1px solid var(--cc-grid, rgba(31, 36, 48, .06));
+        }
+        .mon:last-child { border-bottom: 0; padding-bottom: 6px; }
+        .mon__head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .mon__name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -.01em;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .badge {
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: .02em;
+        }
+        .badge i {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .badge--up { background: var(--cc-ok-soft); color: var(--cc-ok); border: 1px solid var(--cc-ok-line); }
+        .badge--down { background: var(--cc-danger-soft); color: var(--cc-danger); border: 1px solid var(--cc-danger-line); }
+        .badge--pend { background: var(--cc-bg); color: var(--cc-sub); border: 1px solid var(--cc-line); }
+        .badge--maint { background: var(--cc-accent-soft); color: var(--cc-accent); border: 1px solid var(--cc-accent-line); }
+        .mon__right {
+            margin-left: auto;
+            display: flex;
+            align-items: baseline;
+            gap: 14px;
+            font-size: 12px;
+            color: var(--cc-sub);
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .mon__right b {
+            font-size: 13px;
+            color: var(--cc-ink);
+            font-weight: 700;
+        }
+        .mon__ping { min-width: 64px; text-align: right; }
+
+        /* 心跳条 */
+        .hb {
+            margin-top: 10px;
+            display: flex;
+            gap: 2px;
+            height: 26px;
+            align-items: stretch;
+        }
+        .hb i {
+            flex: 1 1 0;
+            min-width: 2px;
+            border-radius: 2px;
+            background: var(--cc-pending);
+            transition: transform var(--cc-dur) var(--cc-ease), opacity var(--cc-dur) var(--cc-ease);
+        }
+        .hb i:hover { transform: scaleY(1.25); }
+        .hb i[data-s="1"] { background: var(--cc-ok); }
+        .hb i[data-s="0"] { background: var(--cc-danger); }
+        .hb i[data-s="2"] { background: var(--cc-pending); }
+        .hb i[data-s="3"] { background: var(--cc-accent); }
+        @media (max-width: 767px) { .hb { height: 20px; gap: 1.5px; } }
+
+        .hb-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--cc-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status {
+            margin-top: 16px;
+            min-height: 20px;
+            font-size: 12px;
+            color: var(--cc-sub);
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+        .status--err { color: var(--cc-danger); }
+
+        /* ---------- 骨架屏与入场 ---------- */
+        .skel {
+            color: transparent !important;
+            background: var(--cc-line);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+        .skel::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.6), rgba(255,255,255,0));
+            animation: skel 1.3s infinite;
+        }
+        @keyframes skel { to { transform: translateX(100%); } }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .is-in { animation: rise .4s var(--cc-ease) both; }
+
+        /* ---------- 页脚（同款） ---------- */
+        .ftr {
+            background: var(--cc-surface);
+            border-top: 1px solid var(--cc-line);
+            padding-block: clamp(24px, 3.4vw, 32px);
+            text-align: center;
+            font-size: 12.5px;
+            line-height: 2;
+            color: var(--cc-sub);
+        }
+        .ftr .notes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 18px;
+        }
+        .ftr a { color: var(--cc-accent); }
+        .ftr a:hover { color: var(--cc-accent-hover); text-decoration: underline; text-underline-offset: 2px; }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .01ms !important;
+            }
+            .skel::after { display: none; }
+        }
+
+        @media (max-width: 767px) {
+            .clock { display: none; }
+            .mon__right { gap: 10px; }
+            .mon__ping { min-width: 0; }
+        }
+        @media (max-width: 719px) {
+            .hdr__in { gap: 10px; min-height: 56px; }
+            .nav { gap: 0; }
+            .nav__link { padding: 8px 9px; font-size: 14px; }
+            .hdr__cta { margin-left: 4px; }
+            .brand__img { height: 32px; }
+            .mon__right { flex-basis: 100%; margin-left: 0; justify-content: space-between; }
+        }
+        @media (max-width: 359px) {
+            .nav__link { padding: 8px 8px; font-size: 13.5px; }
+            .hdr__cta { padding: 8px 9px; }
+            .cta__txt { display: none; }
+            .brand__img { height: 30px; }
+        }
+    </style>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="hdr">
+    <div class="wrap hdr__in">
+        <a class="brand" href="/" aria-label="魔法师图床 首页">
+            <img class="brand__img" src="static/images/logo-horizontal.svg"
+                 width="240" height="56" alt="魔法师图床" decoding="async">
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+            <a class="nav__link" href="/analytics.html">统计</a>
+            <a class="nav__link is-active" href="/status.html" aria-current="page">状态</a>
+            <a class="btn btn--primary btn--sm hdr__cta" href="https://afd.mofashi.ltd" target="_blank" rel="noopener"
+               aria-label="赞助我们" title="赞助我们">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20.3l-1.2-1.1C6 14.8 3.5 12.5 3.5 9.7 3.5 7.4 5.3 5.6 7.6 5.6c1.3 0 2.6.6 3.4 1.6.8-1 2.1-1.6 3.4-1.6 2.3 0 4.1 1.8 4.1 4.1 0 2.8-2.5 5.1-7.3 9.5L12 20.3z"/>
+                </svg>
+                <span class="cta__txt">赞助我们</span>
+            </a>
+        </nav>
+
+        <span class="clock" id="currentTime"></span>
+    </div>
+</header>
+
+<main id="main" class="wrap page">
+    <h1 class="page__title">服务状态</h1>
+    <p class="meta" id="pageMeta">正在加载监控数据…</p>
+
+    <div class="banner" id="banner" role="status">
+        <span class="banner__dot" aria-hidden="true"></span>
+        <div class="banner__txt">
+            <div class="banner__title skel" id="bannerTitle">加载中</div>
+            <div class="banner__sub skel" id="bannerSub">—</div>
+        </div>
+    </div>
+
+    <div class="notice" id="notice"></div>
+
+    <section class="panel">
+        <h2><span class="dot"></span>监控项<span class="hint" id="hbHint">心跳粒度 5 分钟</span></h2>
+        <div id="monList">
+            <div class="mon">
+                <div class="mon__head">
+                    <span class="mon__name skel">监控项加载中</span>
+                    <span class="mon__right"><span class="skel">可用率 —</span><span class="skel">延迟 —</span></span>
+                </div>
+                <div class="hb"><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i><i class="skel"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <p class="status" id="status" aria-live="polite">正在加载状态数据…</p>
+    <noscript><p class="status status--err">本页需要启用 JavaScript 才能读取监控数据。</p></noscript>
+</main>
+
+<footer class="ftr">
+    <div class="wrap">
+        <div class="notes">
+            <span>数据来源 Uptime Kuma（status.mofashi.ltd）</span>
+            <span>心跳条展示最近约 8 小时</span>
+            <span>每 5 分钟自动刷新 · <a href="/">返回首页</a></span>
+        </div>
+    </div>
+</footer>
+
+<script>
+(function () {
+    'use strict';
+
+    var KUMA_BASE = 'https://status.mofashi.ltd';
+    var SLUG = 'img';
+    var STATUS_TEXT = { 1: '正常', 0: '故障', 2: '等待', 3: '维护' };
+
+    function $(id) { return document.getElementById(id); }
+
+    /* ---------- 心跳条渲染 ---------- */
+    function renderHeartbeats(list) {
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < list.length; i++) {
+            var hb = list[i];
+            var bar = document.createElement('i');
+            bar.setAttribute('data-s', String(hb.status));
+            var ping = (hb.ping !== null && hb.ping !== undefined && !isNaN(hb.ping)) ? hb.ping + ' ms' : '无延迟数据';
+            bar.title = hb.time.slice(0, 19) + ' · ' + (STATUS_TEXT[hb.status] || '未知') + ' · ' + ping;
+            frag.appendChild(bar);
+        }
+        return frag;
+    }
+
+    function fmtUptime(v) {
+        if (v === null || v === undefined || isNaN(v)) return '—';
+        return (v * 100).toFixed(2) + '%';
+    }
+
+    function fmtPing(hb) {
+        if (!hb) return '—';
+        var p = hb.ping;
+        if (p === null || p === undefined || isNaN(p)) return hb.status === 1 ? '无数据' : '—';
+        return p + ' ms';
+    }
+
+    function badgeClass(s) {
+        if (s === 1) return 'badge badge--up';
+        if (s === 0) return 'badge badge--down';
+        if (s === 3) return 'badge badge--maint';
+        return 'badge badge--pend';
+    }
+
+    /* ---------- 渲染 ---------- */
+    var gotData = false;
+    var REFRESH_MS = 5 * 60 * 1000;
+
+    function renderMonitors(cfg, hbd) {
+        var groups = cfg.publicGroupList || [];
+        var hbList = (hbd && hbd.heartbeatList) || {};
+        var uptime = (hbd && hbd.uptimeList) || {};
+        var box = $('monList');
+        box.innerHTML = '';
+
+        var monCount = 0;
+        var downCount = 0;
+        var maintCount = 0;
+        var uptimeSum = 0;
+        var uptimeCnt = 0;
+
+        groups.forEach(function (group) {
+            (group.monitorList || []).forEach(function (m) {
+                monCount++;
+                var list = hbList[String(m.id)] || [];
+                var last = list.length ? list[list.length - 1] : null;
+                var lastStatus = last ? last.status : 2;
+                if (lastStatus === 0) downCount++;
+                if (lastStatus === 3) maintCount++;
+
+                var up = uptime[m.id + '_24'];
+                if (up !== undefined && !isNaN(up)) { uptimeSum += up; uptimeCnt++; }
+
+                var row = document.createElement('div');
+                row.className = 'mon is-in';
+
+                var head = document.createElement('div');
+                head.className = 'mon__head';
+
+                var name = document.createElement('span');
+                name.className = 'mon__name';
+                name.textContent = m.name;
+                head.appendChild(name);
+
+                var badge = document.createElement('span');
+                badge.className = badgeClass(lastStatus);
+                badge.innerHTML = '<i></i>';
+                badge.appendChild(document.createTextNode(last ? STATUS_TEXT[lastStatus] : '无数据'));
+                head.appendChild(badge);
+
+                var right = document.createElement('span');
+                right.className = 'mon__right';
+
+                var upEl = document.createElement('span');
+                upEl.innerHTML = '24h 可用率 <b>' + fmtUptime(up) + '</b>';
+                right.appendChild(upEl);
+
+                var pingEl = document.createElement('span');
+                pingEl.className = 'mon__ping';
+                pingEl.textContent = fmtPing(last);
+                right.appendChild(pingEl);
+
+                head.appendChild(right);
+                row.appendChild(head);
+
+                var hb = document.createElement('div');
+                hb.className = 'hb';
+                if (list.length) {
+                    hb.appendChild(renderHeartbeats(list));
+                } else {
+                    var empty = document.createElement('i');
+                    empty.style.flex = '1';
+                    hb.appendChild(empty);
+                }
+                row.appendChild(hb);
+
+                var hbMeta = document.createElement('div');
+                hbMeta.className = 'hb-meta';
+                var l = list.length;
+                hbMeta.innerHTML = '<span>' + (l ? list[0].time.slice(0, 16) : '—') + ' → ' + (l ? list[l - 1].time.slice(0, 16) : '—') + '</span><span>' + l + ' 次心跳</span>';
+                row.appendChild(hbMeta);
+
+                box.appendChild(row);
+            });
+        });
+
+        // 总览横幅
+        var banner = $('banner');
+        var title = $('bannerTitle');
+        var sub = $('bannerSub');
+        title.classList.remove('skel');
+        sub.classList.remove('skel');
+
+        if (downCount > 0) {
+            banner.className = 'banner is-down';
+            title.textContent = '部分服务异常';
+            sub.textContent = downCount + ' / ' + monCount + ' 个监控项出现故障';
+        } else if (maintCount > 0 && maintCount === monCount) {
+            banner.className = 'banner is-warn';
+            title.textContent = '维护中';
+            sub.textContent = '全部监控项处于计划维护状态';
+        } else {
+            banner.className = 'banner is-ok';
+            title.textContent = '全部系统正常运行';
+            sub.textContent = monCount + ' 个监控项全部在线 · 24h 平均可用率 ' +
+                (uptimeCnt ? fmtUptime(uptimeSum / uptimeCnt) : '—');
+        }
+
+        // 事件公告
+        var incidents = cfg.incidents || [];
+        var msg = '';
+        incidents.forEach(function (inc) {
+            if (inc && inc.title) {
+                msg += '公告：' + inc.title + (inc.content ? ' — ' + String(inc.content).replace(/<[^>]*>/g, '').slice(0, 120) : '');
+            }
+        });
+        $('notice').textContent = msg;
+
+        $('pageMeta').textContent = '数据来自 Uptime Kuma · ' + monCount + ' 个监控项';
+        return { monCount: monCount, downCount: downCount };
+    }
+
+    /* ---------- 状态行 + 自动刷新倒计时 ---------- */
+    var state = 'loading';
+    var isLoading = false;
+    var lastOkAt = null;
+    var errMsg = '';
+    var nextAt = 0;
+
+    function leftSec() { return Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)); }
+
+    function paintStatus() {
+        var el = $('status');
+        if (state === 'loading') {
+            el.textContent = '数据刷新中…';
+            el.className = 'status';
+        } else if (state === 'ok') {
+            el.textContent = '数据更新于 ' + lastOkAt.toLocaleTimeString('zh-CN') + ' · ' + leftSec() + ' 秒后自动刷新';
+            el.className = 'status';
+        } else {
+            el.textContent = '数据加载失败：' + errMsg + ' · ' + leftSec() + ' 秒后重试';
+            el.className = 'status status--err';
+        }
+    }
+
+    function api(path) {
+        return fetch(KUMA_BASE + path, { cache: 'no-store' }).then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+        });
+    }
+
+    function load() {
+        if (isLoading) return;
+        isLoading = true;
+        state = 'loading';
+        paintStatus();
+
+        var done = false;
+        function finish(ok, err) {
+            if (done) return;
+            done = true;
+            isLoading = false;
+            nextAt = Date.now() + REFRESH_MS;
+            if (ok) {
+                state = 'ok';
+                lastOkAt = new Date();
+            } else {
+                state = 'error';
+                errMsg = (err && err.message) || '未知错误';
+                if (errMsg === 'Failed to fetch') errMsg = '网络请求失败（可能为跨域或网络不可达）';
+                if (!gotData) {
+                    $('bannerTitle').classList.remove('skel');
+                    $('bannerTitle').textContent = '无法获取状态';
+                    $('bannerSub').classList.remove('skel');
+                    $('bannerSub').textContent = '将在下个周期自动重试';
+                    $('monList').innerHTML = '';
+                }
+            }
+            paintStatus();
+        }
+
+        Promise.all([
+            api('/api/status-page/' + SLUG),
+            api('/api/status-page/heartbeat/' + SLUG)
+        ]).then(function (res) {
+            renderMonitors(res[0], res[1]);
+            gotData = true;
+            finish(true);
+        }).catch(function (err) {
+            finish(false, err);
+        });
+    }
+
+    setInterval(function () { if (!isLoading) paintStatus(); }, 1000);
+
+    function tickClock() {
+        var now = new Date();
+        $('currentTime').textContent =
+            now.toLocaleDateString('zh-CN') + ' ' + now.toLocaleTimeString('zh-CN');
+    }
+    tickClock();
+    setInterval(tickClock, 1000);
+
+    load();
+    setInterval(load, REFRESH_MS);
+}());
+</script>
+</body>
+</html>
