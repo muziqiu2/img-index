@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>魔法师图床 · 数据统计</title>
-    <meta name="description" content="魔法师图床 Cloudflare 线路的流量与请求统计。">
+    <meta name="description" content="魔法师图床的流量与请求统计。">
     <meta name="theme-color" content="#2563eb">
 
     <!-- favicon（与首页保持一致）：ICO 兜底优先，现代浏览器选 SVG -->
@@ -502,7 +502,7 @@
 
     var API_BASE = 'https://cdnpanel.mofashi.ltd';
     var API_TOKEN = 'b8ede8bb0127559f03be9bcb0810b874a05a1821';
-    var VENDOR = 'cloudflare';
+    var VENDORS = ['cloudflare', 'aliyun'];   // 多厂商取数后合并展示
     var REFRESH_MS = 5 * 60 * 1000;
 
     var CSS = getComputedStyle(document.documentElement);
@@ -663,6 +663,71 @@
         };
     }
 
+    /* ---------- 多厂商合并 ---------- */
+    // 汇总：流量/请求/回源求和，命中率按流量加权
+    function mergeSummaries(list) {
+        var out = JSON.parse(JSON.stringify(list[0]));
+        var t = out.totals = { traffic_bytes: 0, bandwidth: 0, origin_bytes: 0, requests: 0 };
+        var hitTraffic = 0, hitSum = 0, approx = false, vcount = 0;
+        list.forEach(function (j) {
+            var tt = (j && j.totals) || {};
+            ['traffic_bytes', 'bandwidth', 'origin_bytes', 'requests'].forEach(function (k) {
+                if (isNum(tt[k])) t[k] += tt[k];
+            });
+            if (isNum(tt.traffic_bytes) && isNum(tt.cache_hit_rate) && tt.traffic_bytes > 0) {
+                hitSum += tt.cache_hit_rate * tt.traffic_bytes;
+                hitTraffic += tt.traffic_bytes;
+            }
+            if (tt.is_approximate) approx = true;
+            if (isNum(tt.vendors_count)) vcount += tt.vendors_count;
+        });
+        t.cache_hit_rate = hitTraffic > 0 ? hitSum / hitTraffic : null;
+        t.origin_rate = t.traffic_bytes > 0 ? t.origin_bytes / t.traffic_bytes : null;
+        t.sampling_rate = 100;
+        t.is_approximate = approx;
+        t.vendors_count = vcount;
+        return out;
+    }
+
+    // 趋势：按时间桶对齐求和，桶内命中率按流量加权
+    function mergeTrends(list) {
+        var base = JSON.parse(JSON.stringify(list[0]));
+        var buckets = base.buckets || [];
+        var map = {};
+        buckets.forEach(function (b) { map[b] = { traffic: 0, requests: 0, hitSum: 0, hitT: 0 }; });
+        list.forEach(function (j) {
+            (j && j.data || []).forEach(function (d) {
+                var m = map[d.bucket];
+                if (!m) return;
+                if (isNum(d.traffic_bytes)) m.traffic += d.traffic_bytes;
+                if (isNum(d.requests)) m.requests += d.requests;
+                if (isNum(d.cache_hit_rate) && isNum(d.traffic_bytes) && d.traffic_bytes > 0) {
+                    m.hitSum += d.cache_hit_rate * d.traffic_bytes;
+                    m.hitT += d.traffic_bytes;
+                }
+            });
+        });
+        base.data = buckets.map(function (b) {
+            var m = map[b];
+            return {
+                date: b, bucket: b,
+                traffic_bytes: m.traffic, bandwidth: m.traffic,
+                requests: m.requests,
+                cache_hit_rate: m.hitT > 0 ? m.hitSum / m.hitT : null
+            };
+        });
+        base.series = [{
+            label: (base.series && base.series[0] && base.series[0].label) || '',
+            datasets: {
+                traffic_bytes: base.data.map(function (d) { return d.traffic_bytes; }),
+                origin_bytes: base.data.map(function (d) { return null; }),
+                requests: base.data.map(function (d) { return d.requests; }),
+                cache_hit_rate: base.data.map(function (d) { return d.cache_hit_rate; })
+            }
+        }];
+        return base;
+    }
+
     /* ---------- 渲染 ---------- */
     var gotData = false;
 
@@ -696,7 +761,7 @@
         var w = json.window;
         var approx = t.is_approximate ? ' · 数值为采样约值' : '';
         $('windowInfo').textContent = w
-            ? 'Cloudflare 线路 · 统计窗口 ' + w.start + ' → ' + w.end + approx
+            ? '统计窗口 ' + w.start + ' → ' + w.end + approx
             : '';
     }
 
@@ -772,12 +837,20 @@
             paintStatus();
         }
 
-        Promise.all([
-            api('/api/metrics/summary?range=24h&vendor=' + VENDOR),
-            api('/api/metrics/trend?range=7d&vendor=' + VENDOR)
-        ]).then(function (res) {
-            renderSummary(res[0]);
-            renderTrend(res[1]);
+        Promise.all(
+            VENDORS.reduce(function (acc, v) {
+                acc.push(api('/api/metrics/summary?range=24h&vendor=' + v));
+                acc.push(api('/api/metrics/trend?range=7d&vendor=' + v));
+                return acc;
+            }, [])
+        ).then(function (res) {
+            var summaries = [], trends = [];
+            for (var i = 0; i < VENDORS.length; i++) {
+                summaries.push(res[i * 2]);
+                trends.push(res[i * 2 + 1]);
+            }
+            renderSummary(mergeSummaries(summaries));
+            renderTrend(mergeTrends(trends));
             gotData = true;
             finish(true);
         }).catch(function (err) {

@@ -541,7 +541,6 @@
 <footer class="ftr">
     <div class="wrap">
         <div class="notes">
-            <span>数据来源 Uptime Kuma（status.mofashi.ltd）</span>
             <span>时间均为北京时间（UTC+8）</span>
             <span>心跳条展示最近约 8 小时 · 每 5 分钟自动刷新</span>
             <span><a href="/">返回首页</a></span>
@@ -750,7 +749,7 @@
         });
         $('notice').textContent = msg;
 
-        $('pageMeta').textContent = '数据来自 Uptime Kuma · ' + monCount + ' 个监控项 · 时间均为北京时间';
+        $('pageMeta').textContent = monCount + ' 个监控项 · 时间均为北京时间';
         return { monCount: monCount, downCount: downCount };
     }
 
