@@ -365,7 +365,8 @@
         }
         .mon__ping { min-width: 64px; text-align: right; }
 
-        /* 心跳条 */
+        /* 心跳条：格子数量由 JS 按容器宽度聚合决定（宽屏最多 100，窄屏自动合并），
+           不设 min-width，避免子像素取整造成宽窄不一 */
         .hb {
             margin-top: 10px;
             display: flex;
@@ -375,7 +376,7 @@
         }
         .hb i {
             flex: 1 1 0;
-            min-width: 2px;
+            min-width: 0;
             border-radius: 2px;
             background: var(--cc-pending);
             transition: transform var(--cc-dur) var(--cc-ease), opacity var(--cc-dur) var(--cc-ease);
@@ -385,7 +386,7 @@
         .hb i[data-s="0"] { background: var(--cc-danger); }
         .hb i[data-s="2"] { background: var(--cc-pending); }
         .hb i[data-s="3"] { background: var(--cc-accent); }
-        @media (max-width: 767px) { .hb { height: 20px; gap: 1.5px; } }
+        @media (max-width: 767px) { .hb { height: 20px; } }
 
         .hb-meta {
             display: flex;
@@ -521,7 +522,7 @@
     <div class="notice" id="notice"></div>
 
     <section class="panel">
-        <h2><span class="dot"></span>监控项<span class="hint" id="hbHint">心跳粒度 5 分钟</span></h2>
+        <h2><span class="dot"></span>监控项<span class="hint" id="hbHint">心跳粒度 5 分钟 · 时间为北京时间</span></h2>
         <div id="monList">
             <div class="mon">
                 <div class="mon__head">
@@ -541,8 +542,9 @@
     <div class="wrap">
         <div class="notes">
             <span>数据来源 Uptime Kuma（status.mofashi.ltd）</span>
-            <span>心跳条展示最近约 8 小时</span>
-            <span>每 5 分钟自动刷新 · <a href="/">返回首页</a></span>
+            <span>时间均为北京时间（UTC+8）</span>
+            <span>心跳条展示最近约 8 小时 · 每 5 分钟自动刷新</span>
+            <span><a href="/">返回首页</a></span>
         </div>
     </div>
 </footer>
@@ -554,22 +556,72 @@
     var KUMA_BASE = 'https://status.mofashi.ltd';
     var SLUG = 'img';
     var STATUS_TEXT = { 1: '正常', 0: '故障', 2: '等待', 3: '维护' };
+    var RANK = { 0: 0, 3: 1, 2: 2, 1: 3 };   // 心跳聚合时取「最坏」状态：故障 > 维护 > 等待 > 正常
 
     function $(id) { return document.getElementById(id); }
 
-    /* ---------- 心跳条渲染 ---------- */
-    function renderHeartbeats(list) {
+    /* ---------- 时间：Kuma 返回 UTC（无时区后缀），统一换算为北京时间展示 ---------- */
+    function kumaTime(str) {
+        return new Date(String(str).replace(' ', 'T') + 'Z');
+    }
+    function fmtBJ(d, withSec) {
+        if (!(d instanceof Date) || isNaN(d)) return '—';
+        var opt = {
+            timeZone: 'Asia/Shanghai', hour12: false,
+            year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+        };
+        if (withSec) opt.second = '2-digit';
+        return d.toLocaleString('zh-CN', opt);
+    }
+
+    /* ---------- 心跳聚合：按容器宽度决定格子数，避免窄屏 100 格挤成宽窄不一 ----------
+       每格合并 size 条心跳：状态取最坏（故障>维护>等待>正常），延迟取平均，时间取组内最后一条 */
+    function aggregate(list, n) {
+        if (list.length <= n) return list;
+        var out = [];
+        var size = list.length / n;
+        for (var i = 0; i < n; i++) {
+            var start = Math.round(i * size);
+            var end = (i === n - 1) ? list.length : Math.max(start + 1, Math.round((i + 1) * size));
+            var status = 1, psum = 0, pcnt = 0;
+            for (var j = start; j < end; j++) {
+                var h = list[j];
+                if (RANK[h.status] < RANK[status]) status = h.status;
+                if (h.ping !== null && h.ping !== undefined && !isNaN(h.ping)) { psum += h.ping; pcnt++; }
+            }
+            out.push({
+                status: status,
+                ping: pcnt ? Math.round(psum / pcnt) : null,
+                time: list[end - 1].time
+            });
+        }
+        return out;
+    }
+
+    function targetBars(w) {
+        // 每格约 8px 起（含间隔）：360px 手机 ≈ 45 格，1120px 桌面封顶 100 格（原生细节）
+        return Math.max(28, Math.min(100, Math.floor(w / 8)));
+    }
+
+    function buildBars(hbEl, list) {
+        hbEl.innerHTML = '';
+        var n = targetBars(hbEl.clientWidth || 0);
+        var bars = aggregate(list, n);
         var frag = document.createDocumentFragment();
-        for (var i = 0; i < list.length; i++) {
-            var hb = list[i];
+        for (var i = 0; i < bars.length; i++) {
+            var b = bars[i];
             var bar = document.createElement('i');
-            bar.setAttribute('data-s', String(hb.status));
-            var ping = (hb.ping !== null && hb.ping !== undefined && !isNaN(hb.ping)) ? hb.ping + ' ms' : '无延迟数据';
-            bar.title = hb.time.slice(0, 19) + ' · ' + (STATUS_TEXT[hb.status] || '未知') + ' · ' + ping;
+            bar.setAttribute('data-s', String(b.status));
+            var ping = (b.ping !== null && b.ping !== undefined && !isNaN(b.ping)) ? b.ping + ' ms' : '无延迟数据';
+            bar.title = fmtBJ(kumaTime(b.time), true) + ' · ' + (STATUS_TEXT[b.status] || '未知') + ' · ' + ping;
             frag.appendChild(bar);
         }
-        return frag;
+        hbEl.appendChild(frag);
     }
+
+    /* ---------- 渲染 ---------- */
+    var gotData = false;
+    var REFRESH_MS = 5 * 60 * 1000;
 
     function fmtUptime(v) {
         if (v === null || v === undefined || isNaN(v)) return '—';
@@ -590,11 +642,7 @@
         return 'badge badge--pend';
     }
 
-    /* ---------- 渲染 ---------- */
-    var gotData = false;
-    var REFRESH_MS = 5 * 60 * 1000;
-
-    function renderMonitors(cfg, hbd) {
+    function renderMonitors(cfg, hbd, isResize) {
         var groups = cfg.publicGroupList || [];
         var hbList = (hbd && hbd.heartbeatList) || {};
         var uptime = (hbd && hbd.uptimeList) || {};
@@ -620,7 +668,7 @@
                 if (up !== undefined && !isNaN(up)) { uptimeSum += up; uptimeCnt++; }
 
                 var row = document.createElement('div');
-                row.className = 'mon is-in';
+                row.className = 'mon' + (isResize ? '' : ' is-in');
 
                 var head = document.createElement('div');
                 head.className = 'mon__head';
@@ -653,22 +701,20 @@
 
                 var hb = document.createElement('div');
                 hb.className = 'hb';
-                if (list.length) {
-                    hb.appendChild(renderHeartbeats(list));
-                } else {
-                    var empty = document.createElement('i');
-                    empty.style.flex = '1';
-                    hb.appendChild(empty);
-                }
                 row.appendChild(hb);
 
                 var hbMeta = document.createElement('div');
                 hbMeta.className = 'hb-meta';
                 var l = list.length;
-                hbMeta.innerHTML = '<span>' + (l ? list[0].time.slice(0, 16) : '—') + ' → ' + (l ? list[l - 1].time.slice(0, 16) : '—') + '</span><span>' + l + ' 次心跳</span>';
+                hbMeta.innerHTML = '<span>' + (l
+                    ? fmtBJ(kumaTime(list[0].time)) + ' → ' + fmtBJ(kumaTime(list[l - 1].time))
+                    : '—') + '</span><span>' + l + ' 次心跳</span>';
                 row.appendChild(hbMeta);
 
                 box.appendChild(row);
+
+                // 心跳条需要先入 DOM 拿到实际宽度，再决定聚合格子数
+                if (l) buildBars(hb, list);
             });
         });
 
@@ -704,9 +750,24 @@
         });
         $('notice').textContent = msg;
 
-        $('pageMeta').textContent = '数据来自 Uptime Kuma · ' + monCount + ' 个监控项';
+        $('pageMeta').textContent = '数据来自 Uptime Kuma · ' + monCount + ' 个监控项 · 时间均为北京时间';
         return { monCount: monCount, downCount: downCount };
     }
+
+    /* ---------- 窗口变化：格子数随宽度重算（防抖，仅当目标格数变化才重建） ---------- */
+    var lastData = null;
+    var lastBarN = null;
+    var rsTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(rsTimer);
+        rsTimer = setTimeout(function () {
+            if (!lastData) return;
+            var firstHb = document.querySelector('#monList .hb');
+            var n = firstHb ? targetBars(firstHb.clientWidth || 0) : null;
+            if (n === null || n === lastBarN) return;
+            renderMonitors(lastData[0], lastData[1], true);
+        }, 200);
+    });
 
     /* ---------- 状态行 + 自动刷新倒计时 ---------- */
     var state = 'loading';
@@ -772,7 +833,10 @@
             api('/api/status-page/' + SLUG),
             api('/api/status-page/heartbeat/' + SLUG)
         ]).then(function (res) {
-            renderMonitors(res[0], res[1]);
+            lastData = res;
+            renderMonitors(res[0], res[1], false);
+            var firstHb = document.querySelector('#monList .hb');
+            lastBarN = firstHb ? targetBars(firstHb.clientWidth || 0) : null;
             gotData = true;
             finish(true);
         }).catch(function (err) {
