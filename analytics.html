@@ -494,7 +494,7 @@
     </div>
 </footer>
 
-<script src="https://cdn-jsdelivr.mofashi.ltd/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script src="static/js/Chart.min.js"></script>
 
 <script>
 (function () {
@@ -540,8 +540,7 @@
     /* ---------- 取数 ---------- */
     function api(path) {
         return fetch(API_BASE + path, {
-            headers: { 'Authorization': 'Bearer ' + API_TOKEN },
-            cache: 'no-store'
+            headers: { 'Authorization': 'Bearer ' + API_TOKEN }
         }).then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
@@ -786,6 +785,26 @@
         applyChart(chartBytes, labels, bytes);
     }
 
+    /* ---------- localStorage 兜底：先渲染上次数据（秒显），后台再刷新 ---------- */
+    var CACHE_KEY = 'cc_analytics_v1';
+
+    function tryCache() {
+        try {
+            var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+            if (c && c.summary && c.trend) {
+                renderSummary(c.summary);
+                renderTrend(c.trend);
+                gotData = true;
+                return true;
+            }
+        } catch (e) { /* 缓存损坏则忽略 */ }
+        return false;
+    }
+
+    function saveCache(summary, trend) {
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), summary: summary, trend: trend })); } catch (e) {}
+    }
+
     /* ---------- 状态行 + 自动刷新倒计时 ---------- */
     var state = 'loading';      // loading | ok | error
     var isLoading = false;
@@ -798,7 +817,7 @@
     function paintStatus() {
         var el = $('status');
         if (state === 'loading') {
-            el.textContent = '数据刷新中…';
+            el.textContent = (gotData ? '显示缓存数据 · ' : '') + '数据刷新中…';
             el.className = 'status';
         } else if (state === 'ok') {
             el.textContent = '数据更新于 ' + lastOkAt.toLocaleTimeString('zh-CN') + ' · ' + leftSec() + ' 秒后自动刷新';
@@ -849,8 +868,11 @@
                 summaries.push(res[i * 2]);
                 trends.push(res[i * 2 + 1]);
             }
-            renderSummary(mergeSummaries(summaries));
-            renderTrend(mergeTrends(trends));
+            var ms = mergeSummaries(summaries);
+            var mt = mergeTrends(trends);
+            renderSummary(ms);
+            renderTrend(mt);
+            saveCache(ms, mt);
             gotData = true;
             finish(true);
         }).catch(function (err) {
@@ -869,6 +891,7 @@
     setInterval(tickClock, 1000);
 
     /* ---------- 启动 ---------- */
+    tryCache();
     if (typeof Chart === 'undefined') {
         ['requestsChart', 'bytesChart'].forEach(function (id) {
             var canvas = $(id);

@@ -767,6 +767,28 @@
         }, 200);
     });
 
+    /* ---------- localStorage 兜底：先渲染上次数据（秒显），后台再刷新 ---------- */
+    var CACHE_KEY = 'cc_status_v1';
+
+    function tryCache() {
+        try {
+            var c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+            if (c && c.cfg && c.hbd) {
+                lastData = [c.cfg, c.hbd];
+                renderMonitors(c.cfg, c.hbd, false);
+                var firstHb = document.querySelector('#monList .hb');
+                lastBarN = firstHb ? targetBars(firstHb.clientWidth || 0) : null;
+                gotData = true;
+                return true;
+            }
+        } catch (e) { /* 缓存损坏则忽略 */ }
+        return false;
+    }
+
+    function saveCache(cfg, hbd) {
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), cfg: cfg, hbd: hbd })); } catch (e) {}
+    }
+
     /* ---------- 状态行 + 自动刷新倒计时 ---------- */
     var state = 'loading';
     var isLoading = false;
@@ -779,7 +801,7 @@
     function paintStatus() {
         var el = $('status');
         if (state === 'loading') {
-            el.textContent = '数据刷新中…';
+            el.textContent = (gotData ? '显示缓存数据 · ' : '') + '数据刷新中…';
             el.className = 'status';
         } else if (state === 'ok') {
             el.textContent = '数据更新于 ' + lastOkAt.toLocaleTimeString('zh-CN') + ' · ' + leftSec() + ' 秒后自动刷新';
@@ -791,7 +813,7 @@
     }
 
     function api(path) {
-        return fetch(KUMA_BASE + path, { cache: 'no-store' }).then(function (res) {
+        return fetch(KUMA_BASE + path).then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
         });
@@ -835,6 +857,7 @@
             renderMonitors(res[0], res[1], false);
             var firstHb = document.querySelector('#monList .hb');
             lastBarN = firstHb ? targetBars(firstHb.clientWidth || 0) : null;
+            saveCache(res[0], res[1]);
             gotData = true;
             finish(true);
         }).catch(function (err) {
@@ -852,6 +875,7 @@
     tickClock();
     setInterval(tickClock, 1000);
 
+    load.cacheHit = tryCache();
     load();
     setInterval(load, REFRESH_MS);
 }());
