@@ -48,7 +48,15 @@
         "inLanguage": "zh-CN",
         "potentialAction": {
             "@type": "CreateAction",
-            "target": "https://tc.mofashi.ltd/index.php"
+            "name": "上传图片",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://tc.mofashi.ltd/",
+                "actionPlatform": [
+                    "https://schema.org/DesktopWebPlatform",
+                    "https://schema.org/MobileWebPlatform"
+                ]
+            }
         }
     }
     </script>

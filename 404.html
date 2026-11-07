@@ -3,50 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - 页面未找到</title>
+    <meta name="robots" content="noindex, follow">
+    <title>404 页面不存在 · 魔法师图床</title>
+    <link rel="icon" type="image/x-icon" sizes="32x32" href="/favicon.ico">
     <style>
+        :root {
+            --cc-bg: #f7f8fa;
+            --cc-surface: #ffffff;
+            --cc-line: #e4e7ec;
+            --cc-ink: #1f2430;
+            --cc-sub: #5f6b7a;
+            --cc-muted: #98a1b0;
+            --cc-accent: #2563eb;
+            --cc-accent-soft: #eff4ff;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--cc-bg);
+            color: var(--cc-ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                         "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
+
+        .card {
+            width: 100%;
+            max-width: 520px;
+            padding: 40px 32px;
+            background: var(--cc-surface);
+            border: 1px solid var(--cc-line);
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgba(31, 36, 48, .03), 0 4px 16px -8px rgba(31, 36, 48, .06);
             text-align: center;
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
+        .code {
+            margin: 0;
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: var(--cc-accent);
+            font-variant-numeric: tabular-nums;
+        }
+
         h1 {
-            color: #333;
+            margin: 16px 0 0;
+            font-size: 22px;
+            font-weight: 600;
+            line-height: 1.4;
         }
-        p {
-            color: #666;
+
+        .desc {
+            margin: 10px 0 0;
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--cc-sub);
+        }
+
+        .hint {
+            margin: 18px 0 0;
+            padding: 12px 16px;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--cc-muted);
+            background: var(--cc-bg);
+            border: 1px solid var(--cc-line);
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 26px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid var(--cc-line);
+            color: var(--cc-ink);
+            background: var(--cc-surface);
+            transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+        }
+
+        .btn:hover {
+            background: var(--cc-bg);
+            border-color: #cbd2dc;
+        }
+
+        .btn--primary {
+            color: #fff;
+            background: var(--cc-accent);
+            border-color: var(--cc-accent);
+        }
+
+        .btn--primary:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+        }
+
+        @media (max-width: 480px) {
+            .card { padding: 32px 20px; }
+            .code { font-size: 52px; }
+            h1 { font-size: 19px; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>地区访问限制</h1>
-        <p>您的 IP 地址是: <span id="ip-address"></span></p>
-        <p>很遗憾，我们的网站目前仅对中国大陆的 IP 地址开放。</p>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('https://api.ipify.org?format=json')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('ip-address').textContent = data.ip;
-                })
-                .catch(error => {
-                    console.error('Error fetching IP:', error);
-                });
-        });
-    </script>
+    <main class="card">
+        <p class="code">404</p>
+        <h1>页面走丢了</h1>
+        <p class="desc">你访问的地址不存在，或者链接已经失效。</p>
+        <p class="hint">
+            如果你是在打开一张图片的链接，可能是它已被上传者删除、或原本就输错了地址。
+            本站只负责存储，图片的存续由上传者决定。
+        </p>
+        <div class="actions">
+            <a class="btn btn--primary" href="/">返回首页</a>
+            <a class="btn" href="/status.html">查看服务状态</a>
+        </div>
+    </main>
 </body>
 </html>
